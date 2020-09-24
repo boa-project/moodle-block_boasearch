@@ -292,8 +292,8 @@ define(['jquery', 'core/modal_factory', 'core/templates', 'core/notification'],
             }
 
             // Not for specific catalogues yet.
-            let cataloguename = '';
-            requestObjects[requestObjects.length] = $.get(uri, params, function(data){
+            var cataloguename = '';
+            requestObjects[requestObjects.length] = $.get(uri, params, function(data) {
 
                 if (data.length > 0) {
                     data.sort(function(a, b){
@@ -476,12 +476,12 @@ define(['jquery', 'core/modal_factory', 'core/templates', 'core/notification'],
                             data.metadata.technical.format.match(/audio/gi) ||
                             data.metadata.technical.format.match(/image/gi)) {
 
-                        var name = data.manifest.alternate.find(e => /small/g.test(e))
+                        var name = data.manifest.alternate.find(e => /small/g.test(e));
 
                         if (name) {
                             src = alterpath + name;
                         } else {
-                            name = data.manifest.alternate.find(e => /medium/g.test(e))
+                            name = data.manifest.alternate.find(e => /medium/g.test(e));
                             if (name) {
                                 src = alterpath + name;
                             } else {
@@ -489,7 +489,7 @@ define(['jquery', 'core/modal_factory', 'core/templates', 'core/notification'],
                             }
                         }
                     } else {
-                        name = data.manifest.alternate.find(e => /thumb/g.test(e))
+                        name = data.manifest.alternate.find(e => /thumb/g.test(e));
                         if (name) {
                             src = alterpath + name;
                         } else {
