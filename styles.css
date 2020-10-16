@@ -1,3 +1,7 @@
+.block_boasearch .boa-box {
+    text-align: center;
+}
+
 .block_boasearch .boa-content {
         display: flex;
     flex-wrap: wrap;
