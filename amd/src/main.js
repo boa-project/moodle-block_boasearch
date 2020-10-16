@@ -459,10 +459,23 @@ define(['jquery', 'core/modal_factory', 'core/templates', 'core/notification'],
     var chooseview = function(data) {
 
         var $res;
+
+        // If it is a external resource.
+        if (data.manifest.conexion_type && data.manifest.conexion_type == 'external') {
+            $res = $('<iframe></iframe>');
+            $res.attr('src', data.manifest.url);
+
+            $reslink = $('<p><a target="_blank"></a></p>');
+            $reslink.find('a').attr('href', data.manifest.url).html(data.manifest.url);
+
+            return $res.get(0).outerHTML + $reslink.get(0).outerHTML;
+        }
+
         if (data.metadata.technical && data.metadata.technical.format) {
 
             if (data.metadata.technical.format.match(/pdf/gi) ||
-                    data.metadata.technical.format.match(/html/gi)) {
+                    data.metadata.technical.format.match(/html/gi) ||
+                    data.metadata.technical.format.match(/tepuy/gi)) {
                 $res = $('<iframe></iframe>');
                 $res.attr('src', data.about + '/!/').attr('type', data.metadata.technical.format);
 
@@ -471,25 +484,31 @@ define(['jquery', 'core/modal_factory', 'core/templates', 'core/notification'],
                 var src = '';
                 if (data.manifest.alternate && data.manifest.entrypoint) {
                     var alterpath = data.about + '/!/.alternate/' + data.manifest.entrypoint + '/';
+                    var name = '';
 
                     if (data.metadata.technical.format.match(/video/gi) ||
                             data.metadata.technical.format.match(/audio/gi) ||
                             data.metadata.technical.format.match(/image/gi)) {
 
-                        var name = data.manifest.alternate.find(e => /small/g.test(e));
+                        if (typeof(data.manifest.alternate) == 'object') {
+                            name = data.manifest.alternate.find(e => /small/g.test(e));
 
-                        if (name) {
-                            src = alterpath + name;
-                        } else {
-                            name = data.manifest.alternate.find(e => /medium/g.test(e));
                             if (name) {
                                 src = alterpath + name;
                             } else {
-                                src = data.about + '/!/' + data.manifest.entrypoint;
+                                name = data.manifest.alternate.find(e => /medium/g.test(e));
+                                if (name) {
+                                    src = alterpath + name;
+                                } else {
+                                    src = data.about + '/!/' + data.manifest.entrypoint;
+                                }
                             }
+                        } else {
+                            src = data.about + '/!/' + data.manifest.entrypoint;
                         }
                     } else {
-                        name = data.manifest.alternate.find(e => /thumb/g.test(e));
+                        name = typeof(data.manifest.alternate) == 'object' ?
+                                        data.manifest.alternate.find(e => /thumb/g.test(e)) : '';
                         if (name) {
                             src = alterpath + name;
                         } else {
@@ -530,9 +549,14 @@ define(['jquery', 'core/modal_factory', 'core/templates', 'core/notification'],
         return $res;
     };
 
+    var isdownloadable = function(data) {
+        //ToDo: validate by content type.
+        return !data.manifest.conexion_type || data.manifest.conexion_type != 'external';
+    };
+
     var showmessage = function(text, type, info, asreturn) {
-        type = type ?? 'error';
-        info = info ?? '';
+        type = type ? type : 'error';
+        info = info ? info : '';
 
         var content = $('#boa-tpl-error-item')[0].innerHTML;
 
@@ -571,7 +595,7 @@ define(['jquery', 'core/modal_factory', 'core/templates', 'core/notification'],
      */
     var init = function(blockid, boauri, pagesize, socialnetworks) {
 
-        pagesize = pagesize ?? 10;
+        pagesize = pagesize ? pagesize : 10;
 
         $('#' + blockid).each(function(i, v) {
             var $_this = $(this);
@@ -666,6 +690,7 @@ define(['jquery', 'core/modal_factory', 'core/templates', 'core/notification'],
                                                                 data.metadata.technical.format : '';
                                         data.custom.score = 'avg' in data.social.score ?
                                                                 data.social.score.avg + ' / ' + data.social.score.count : 0;
+                                        data.custom.downloadable = isdownloadable(data);
 
                                         $.each(socialnetworks, function(i, v) {
                                             v.url = v.url.replace('{url}', encodeURI(data.about + '/!/'));

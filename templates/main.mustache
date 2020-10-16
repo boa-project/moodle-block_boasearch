@@ -42,18 +42,17 @@
         <span class="thumb-box" boa-href="{about}" title="{title}" style="background-image: url({about}.img?s=128)"></span>
         <div class="panel-body">
             <label class="title" boa-href="{about}">{title}</label>
-            <span class="desc mcore-text">{description}</span><br />
         </div>
         <div class="panel-foot">
             <span class="meta mcore-text">
                 <!--span class="social badge badge-dark">
                     <i class="fa fa-comment"></i> {comments} {{#str}}comments, block_boasearch{{/str}}
                 </span-->
-                <span class="social badge badge-success score">
-                    <i class="fa fa-heart"></i>{score} {{#str}}likes, block_boasearch{{/str}}
+                <span class="social badge score" title="{{#str}}likes, block_boasearch{{/str}}">
+                    <i class="fa fa-star"></i> {score}
                 </span>
-                <span class="social badge badge-info views">
-                    <i class="fa fa-eye"></i> {views} {{#str}}views, block_boasearch{{/str}}
+                <span class="social badge views" title="{{#str}}views, block_boasearch{{/str}}">
+                    <i class="fa fa-eye"></i> {views}
                 </span>
             </span>
         </div>

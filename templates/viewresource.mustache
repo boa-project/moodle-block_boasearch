@@ -60,23 +60,25 @@
     </div>
 
     <div class="foot">
-        <!--span>
+        {{#custom.downloadable}}
+        <span>
             <a href="{{about}}/!/" target="_blank">
                 {{#str}} original, block_boasearch {{/str}}
                 {{#pix}} i/down, core, {{#str}} download, block_boasearch {{/str}}{{/pix}}
             </a>
-        </span-->
+        </span>
+        {{/custom.downloadable}}
 
-        {{!#custom.alternates}}
-        <!--span>
+        {{#custom.alternates}}
+        <span>
             <a href="{{url}}" target="_blank">{{text}} {{#pix}}i/down, core, {{#str}} download, block_boasearch {{/str}}{{/pix}}</a>
-        </span-->
-        {{!/custom.alternates}}
+        </span>
+        {{/custom.alternates}}
 
         {{#custom.socialnetworks}}
         <span>
             <a href="{{url}}" target="_blank">
-                <i class="fab fa-{{icon}}"></i>
+                <i class="fa fa-{{icon}}"></i>
             </a>
         </span>
         {{/custom.socialnetworks}}

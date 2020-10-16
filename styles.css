@@ -1,11 +1,12 @@
-.block_boasearch .content {
-    display: flex;
+.block_boasearch .boa-content {
+        display: flex;
     flex-wrap: wrap;
     justify-content: center;
     padding-top: 20px;
 }
 
 .block_boasearch .one-resource {
+    width: 200px;
     margin: 0 10px 10px;
     color: #404674;
     overflow: hidden;
@@ -113,6 +114,7 @@
 .block_boasearch-modal .preview iframe {
     width: 100%;
     height: 50vh;
+    border: none;
 }
 
 .block_boasearch-modal .preview video,
