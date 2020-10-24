@@ -518,7 +518,7 @@ define(['jquery', 'core/modal_factory', 'core/templates', 'core/notification'],
 
 
                 } else {
-                    if ('technical' in data.manifest && 'format' in data.manifest.technical &&
+                    if ('technical' in data.metadata && 'format' in data.metadata.technical &&
                             (data.metadata.technical.format.match(/video/gi) ||
                             data.metadata.technical.format.match(/audio/gi) ||
                             data.metadata.technical.format.match(/image/gi))) {
@@ -717,6 +717,10 @@ define(['jquery', 'core/modal_factory', 'core/templates', 'core/notification'],
 
                                             data.custom.alternates[data.custom.alternates.length] = one;
                                         });
+
+                                        if (typeof(data.metadata.general.keywords.none) == 'object') {
+                                            data.metadata.general.keywords.none = data.metadata.general.keywords.none.join(', ');
+                                        }
 
                                         var template = Templates.render('block_boasearch/viewresource', data)
                                             .then(function(html, js) {
