@@ -616,7 +616,7 @@ define(['jquery', 'core/modal_factory', 'core/templates', 'core/notification'],
                 filters: [],
                 options: {
                     cacheLife: 2000,
-                    suggestionsSize: pagesize
+                    resultsSize: pagesize
                 },
                 events: {
                     onstart: function(more) {
@@ -628,8 +628,6 @@ define(['jquery', 'core/modal_factory', 'core/templates', 'core/notification'],
                         }
                     },
                     onfound: function(data, start) {
-
-                        console.log('Encontrados: ' + data.length + ' resultados');
 
                         $searchResult.removeClass('loading');
                         var $target = $searchResult.find('> .boa-content');
