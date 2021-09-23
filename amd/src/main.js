@@ -21,10 +21,10 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-define(['jquery', 'core/modal_factory', 'core/templates', 'core/notification'],
-        function($, ModalFactory, Templates, Notification) {
+define(['jquery', 'core/modal_factory', 'core/modal_events', 'core/templates'],
+        function($, ModalFactory, ModalEvents, Templates) {
 
-    var wwwroot = M.cfg.wwwroot;
+    // var wwwroot = M.cfg.wwwroot;
 
     var $errorBox = null;
 
@@ -68,7 +68,9 @@ define(['jquery', 'core/modal_factory', 'core/templates', 'core/notification'],
         var ferror = function(txt, level) {
             switch(level) {
                 case 'dev':
-                    $boasearch.conf.debug ? console.log('BoASearch - ' + txt): true;
+                    if ($boasearch.conf.debug) {
+                        console.log('BoASearch - ' + txt);
+                    }
                 break;
                 default:
                     console.log('BoASearch - ' + txt);
@@ -82,7 +84,7 @@ define(['jquery', 'core/modal_factory', 'core/templates', 'core/notification'],
         var methods = {
             init: function() {
                 if (!$boasearch.conf.apiuri) {
-                    ferror('Configuration error: You need set the API URI.')
+                    ferror('Configuration error: You need set the API URI.');
                     return;
                 }
 
@@ -131,8 +133,10 @@ define(['jquery', 'core/modal_factory', 'core/templates', 'core/notification'],
                     }
                 });
 
-                $boasearchBox.on('focusout', function(event) {
-                    window.setTimeout(function() { $boasearchSuggestions.customReset(); }, 100);
+                $boasearchBox.on('focusout', function() {
+                    window.setTimeout(function() {
+                        $boasearchSuggestions.customReset();
+                    }, 100);
                 });
             },
 
@@ -141,7 +145,7 @@ define(['jquery', 'core/modal_factory', 'core/templates', 'core/notification'],
             * @param item the current item data to render
             * @param query the last query submited to the server.
             * */
-            getItemMarkup: function(item, query, position) {
+            getItemMarkup: function(item, query) {
                 var text = item.query != '' ? methods.highlightString(item.query, query) : '';
 
                 var $item = $('<li>' + text + '</li>');
@@ -236,13 +240,14 @@ define(['jquery', 'core/modal_factory', 'core/templates', 'core/notification'],
                     if ($boasearch.conf.results.target) {
                         $($boasearch.conf.results.target).addClass('loading');
                         if (startRecord === 0) {
-                            $($boasearch.conf.results.target).empty()
+                            $($boasearch.conf.results.target).empty();
                         }
                     }
                 }
             },
 
             printResultSearch: function(data) {
+
                 if (typeof($boasearch.conf.events.onfound) == 'function') {
                     $boasearch.conf.events.onfound(data, startRecord);
                 }
@@ -253,8 +258,9 @@ define(['jquery', 'core/modal_factory', 'core/templates', 'core/notification'],
 
                         $.each(data, function(k, item) {
                             var $html = $('<div class="boa-video"></div>');
+                            var preview = this.choosePreview(item);
                             $html.append('<a href="' + item.about + '"><h5>' + item.metadata.general.title.none + '</h5></a>');
-                            $html.append('<a href="' + item.about + '"><img src="' + item.about + '.img" /></a>');
+                            $html.append('<a href="' + item.about + '"><img src="' + preview + '.img" /></a>');
                             $html.append('<p>' + item.metadata.general.description.none + '</p>');
 
                             $target.append($html);
@@ -262,11 +268,34 @@ define(['jquery', 'core/modal_factory', 'core/templates', 'core/notification'],
                     }
                 }
             },
+
+            choosePreview: function(item) {
+
+                if ('alternate' in item.manifest && item.manifest.entrypoint) {
+
+                    var alternatebase;
+
+                    if (item.id.indexOf('/content/') >= 0) {
+                        alternatebase = item.id.substr(item.id.indexOf('/content/') + 9);
+                    } else {
+                        alternatebase = item.manifest.entrypoint;
+                    }
+
+                    var alterpath = item.about + '/!/.alternate/' + alternatebase;
+
+                    if (item.manifest.alternate.indexOf('preview.png') >= 0) {
+                        return alterpath + '/preview.png';
+                    } else if (item.manifest.alternate.indexOf('thumb.png') >= 0) {
+                        return alterpath + '/thumb.png';
+                    }
+                }
+
+                return item.about + '.img?s=128';
+            }
         };
 
         // Public methods
         $boasearch.printSuggestions = function(query) {
-            var currentTime = Date.now();
 
             for (var request in requestObjects) {
                 if (request && typeof request === 'object') {
@@ -341,7 +370,7 @@ define(['jquery', 'core/modal_factory', 'core/templates', 'core/notification'],
                         });
                     }
                     else {
-                        params['(meta)[' + filter.meta + ']'] = val;
+                        params['(meta)[' + filter.meta + ']'] = filter.value;
                     }
                 });
             }
@@ -353,9 +382,9 @@ define(['jquery', 'core/modal_factory', 'core/templates', 'core/notification'],
                 success: function(data) {
                     $boasearchSuggestions.empty();
 
-                    if (typeof $data === 'object' && $data.error) {
-                        $boasearch.conf.events.onerror($data);
-                        $data = [];
+                    if (typeof data === 'object' && data.error) {
+                        $boasearch.conf.events.onerror(data);
+                        data = [];
                     }
 
                     if (data.length > 0) {
@@ -371,11 +400,11 @@ define(['jquery', 'core/modal_factory', 'core/templates', 'core/notification'],
                 },
                 error: function(xhr) {
                     var data = xhr.responseText;
-                    $boasearch.conf.events.onerror(jQuery.parseJSON(data));
+                    $boasearch.conf.events.onerror($.parseJSON(data));
                 },
                 fail: function(xhr) {
                     var data = xhr.responseText;
-                    $boasearch.conf.events.onerror(jQuery.parseJSON(data));
+                    $boasearch.conf.events.onerror($.parseJSON(data));
                 }
             });
 
@@ -389,6 +418,8 @@ define(['jquery', 'core/modal_factory', 'core/templates', 'core/notification'],
         $boasearch.restart = function() {
             startRecord = 0;
         };
+
+        $boasearch.choosePreview = methods.choosePreview;
 
         //BoA: Initialize
         methods.init();
@@ -449,6 +480,7 @@ define(['jquery', 'core/modal_factory', 'core/templates', 'core/notification'],
                     case "nextsearch": $boasearch.searchMore(); break;
                     case "option": return $boasearch.conf.options[paramval]; break;
                     case "restart": $boasearch.restart(); break;
+                    case "choosePreview": return $boasearch.choosePreview(paramval); break;
                 }
             } else {
                 console.log('Error in boasearch object');
@@ -465,7 +497,7 @@ define(['jquery', 'core/modal_factory', 'core/templates', 'core/notification'],
             $res = $('<iframe></iframe>');
             $res.attr('src', data.manifest.url);
 
-            $reslink = $('<p><a target="_blank"></a></p>');
+            var $reslink = $('<p><a target="_blank"></a></p>');
             $reslink.find('a').attr('href', data.manifest.url).html(data.manifest.url);
 
             return $res.get(0).outerHTML + $reslink.get(0).outerHTML;
@@ -482,8 +514,15 @@ define(['jquery', 'core/modal_factory', 'core/templates', 'core/notification'],
             } else {
 
                 var src = '';
+                var alternatebase;
+                if (data.id.indexOf('/content/') >= 0) {
+                    alternatebase = data.id.substr(data.id.indexOf('/content/') + 9);
+                } else {
+                    alternatebase = data.manifest.entrypoint;
+                }
+
                 if (data.manifest.alternate && data.manifest.entrypoint) {
-                    var alterpath = data.about + '/!/.alternate/' + data.manifest.entrypoint + '/';
+                    var alterpath = data.about + '/!/.alternate/' + alternatebase + '/';
                     var name = '';
 
                     if (data.metadata.technical.format.match(/video/gi) ||
@@ -579,6 +618,7 @@ define(['jquery', 'core/modal_factory', 'core/templates', 'core/notification'],
 
         var content = $('#boa-tpl-item')[0].innerHTML;
 
+        content = content.replace(/{thumb}/g, item.thumb);
         content = content.replace(/{title}/g, item.metadata.general.title.none);
         content = content.replace(/{about}/g, item.about);
         content = content.replace(/{description}/g, item.metadata.general.description.none);
@@ -597,7 +637,7 @@ define(['jquery', 'core/modal_factory', 'core/templates', 'core/notification'],
 
         pagesize = pagesize ? pagesize : 10;
 
-        $('#' + blockid).each(function(i, v) {
+        $('#' + blockid).each(function() {
             var $_this = $(this);
             var $searchResult = $_this.find('[data-control="search-result"]');
             var $boaSearch = $_this.find('[data-control="search-text"]');
@@ -666,10 +706,12 @@ define(['jquery', 'core/modal_factory', 'core/templates', 'core/notification'],
                                 }
                             }
 
+                            item.thumb = $boaSearch.boasearch('choosePreview', item);
+
                             var $item = $(itemcontent(item));
                             $item.appendTo($target);
 
-                            $item.find('[boa-href]').on('click', function(element) {
+                            $item.find('[boa-href]').on('click', function() {
                                 var $this = $(this);
 
                                 var modalresource = $this.data('modal');
@@ -680,7 +722,7 @@ define(['jquery', 'core/modal_factory', 'core/templates', 'core/notification'],
                                 }
 
                                 var request = $.get($this.attr('boa-href'))
-                                    .then(function( data, textStatus, jqXHR ) {
+                                    .then(function( data ) {
 
                                         data.custom = {};
                                         data.custom.preview = chooseview(data);
@@ -717,7 +759,7 @@ define(['jquery', 'core/modal_factory', 'core/templates', 'core/notification'],
                                             var one = {
                                                 "text": str,
                                                 "url": data.about + '/!/.alternate/' + data.manifest.entrypoint + '/' + alt
-                                            }
+                                            };
 
                                             data.custom.alternates[data.custom.alternates.length] = one;
                                         });
@@ -727,7 +769,7 @@ define(['jquery', 'core/modal_factory', 'core/templates', 'core/notification'],
                                         }
 
                                         var template = Templates.render('block_boasearch/viewresource', data)
-                                            .then(function(html, js) {
+                                            .then(function(html) {
                                                 modalresource.setTitle(data.metadata.general.title.none);
 
                                                 var $html = $(html);
@@ -737,15 +779,17 @@ define(['jquery', 'core/modal_factory', 'core/templates', 'core/notification'],
 
                                                     var params = { value: $rate.data('value') };
 
-                                                    $.post(data.about + '/scores', params, function(data) {})
+                                                    $.post(data.about + '/scores', params, function() {})
                                                         .done(function() {
-                                                            $html.find('[boa-act="rate"]').removeClass('active').each(function(key, element) {
-                                                                var $element = $(element);
+                                                            $html.find('[boa-act="rate"]').
+                                                                removeClass('active').each(function(key, element) {
+                                                                    var $element = $(element);
 
-                                                                if ($element.data('value') <= $rate.data('value')) {
-                                                                    $element.addClass('active');
+                                                                    if ($element.data('value') <= $rate.data('value')) {
+                                                                        $element.addClass('active');
+                                                                    }
                                                                 }
-                                                            });
+                                                            );
                                                         }
                                                     );
 
@@ -758,7 +802,6 @@ define(['jquery', 'core/modal_factory', 'core/templates', 'core/notification'],
                                     }
                                 );
 
-                                var clickedLink = $(element.currentTarget);
                                 ModalFactory.create({
                                     body: request.promise()
                                 })
@@ -766,6 +809,25 @@ define(['jquery', 'core/modal_factory', 'core/templates', 'core/notification'],
                                     modalresource = modal;
                                     modal.getModal().addClass('block_boasearch-modal');
                                     modal.show();
+
+                                    var root = modal.getRoot();
+                                    root.on(ModalEvents.hidden, function() {
+
+                                        // Stop audio and video when close the window.
+                                        $(modal.getBody()).find('video').each(function() {
+                                            this.pause();
+                                        });
+
+                                        $(modal.getBody()).find('audio').each(function() {
+                                            this.pause();
+                                        });
+
+                                        $(modal.getBody()).find('iframe').each(function() {
+                                            let $iframe = $(this);
+                                            $iframe.attr('src', 'about:blank');
+                                            $this.data('modal', null);
+                                        });
+                                    });
 
                                     $this.data('modal', modalresource);
                                 });
@@ -784,7 +846,7 @@ define(['jquery', 'core/modal_factory', 'core/templates', 'core/notification'],
                             $node.remove();
                         });
 
-                        console.log(error)
+                        console.log(error);
 
                         $target.removeClass('loading');
                     }
